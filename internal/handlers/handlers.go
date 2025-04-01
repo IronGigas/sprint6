@@ -13,9 +13,10 @@ import (
 func HandlerCore(res http.ResponseWriter, req *http.Request) {
 	filePath := "../index.html"
 
+	res.Header().Set("Content-Type", "text/plain; charset=utf-8")
+
 	_, err := os.Stat(filePath)
 	if err != nil {
-		res.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		http.Error(res, fmt.Sprintf("An error occurred while accessing the file: %v", err), http.StatusInternalServerError)
 		return
 	}
@@ -46,8 +47,8 @@ func HandlerUpload(w http.ResponseWriter, req *http.Request) {
 	data, err := service.DetectEncoding(string(text))
 
 	// get name for the file
-	//nameForFile := time.Now().Format("20060102_1504") + ".txt"   //мой вариант был лучше
-	nameForFile := time.Now().UTC().String() //на винде нельзя имя файла с ":", программа упадёт если её там запустить
+	nameForFile := time.Now().Format("20060102_1504") + ".txt" //мой вариант был лучше
+	//nameForFile := time.Now().UTC().String() //на винде нельзя имя файла с ":", программа упадёт если её там запустить
 
 	//create the file
 	f, err := os.Create(nameForFile)
@@ -67,9 +68,9 @@ func HandlerUpload(w http.ResponseWriter, req *http.Request) {
 	fmt.Println(data)
 
 	// write data into /upload page
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	_, err = w.Write([]byte(data))
 	if err != nil {
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		http.Error(w, fmt.Sprintf("An error occurred while sending response to client: %v", err), http.StatusInternalServerError)
 		return
 	}
