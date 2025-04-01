@@ -3,7 +3,6 @@ package service
 import (
 	"errors"
 	"strings"
-	"unicode"
 
 	"github.com/Yandex-Practicum/go1fl-sprint6-final/pkg/morse"
 )
@@ -14,27 +13,22 @@ func DetectEncoding(input string) (string, error) {
 		return "", errors.New("String is empty, cannot be converted")
 	}
 
-	containsUnsupported := strings.ContainsFunc(input, func(r rune) bool {
-        upperCase := unicode.ToUpper(r)
-		_, ok := morse.DefaultMorse[upperCase]
-        return !ok && r != ' ' 
-    })
-
-
-    if containsUnsupported {
-        return "", morse.ErrNoEncoding{Text: input}
-    }
-
-	val := strings.Split(input, " ")
-
-	for _, word := range val {
-		for _, char := range word {
-			if char != '.' && char != '-' {
-				return morse.ToMorse(input), nil
-			}
-		}
+	f := func(r rune) bool {
+		return r == '.' || r == '-'
 	}
 
-	return morse.ToText(input), nil
+	if strings.ContainsFunc(input, f) {
+		return morse.ToText(input), nil
+	}
+
+	f2 := func(r rune) bool {
+		return r >= 'а' && r <= 'я' || r >= 'А' && r <= 'Я'
+	}
+
+	if strings.ContainsFunc(input, f2) {
+		return morse.ToMorse(input), nil
+	}
+
+	return "", errors.New("Usupported text")
 
 }
