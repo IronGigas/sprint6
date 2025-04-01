@@ -11,14 +11,16 @@ import (
 )
 
 func HandlerCore(res http.ResponseWriter, req *http.Request) {
+	filePath := "../index.html"
 
-	bytes, err := os.ReadFile("../index.html")
+	_, err := os.Stat(filePath)
 	if err != nil {
-		http.Error(res, fmt.Sprintf("An error occurred while opening html form"), http.StatusInternalServerError)
+		res.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		http.Error(res, fmt.Sprintf("An error occurred while accessing the file: %v", err), http.StatusInternalServerError)
 		return
 	}
 
-	res.Write(bytes)
+	http.ServeFile(res, req, filePath)
 }
 
 func HandlerUpload(w http.ResponseWriter, req *http.Request) {
@@ -31,6 +33,8 @@ func HandlerUpload(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	defer file.Close()
+
 	// read the file
 	text, err := io.ReadAll(file)
 	if err != nil {
@@ -38,13 +42,12 @@ func HandlerUpload(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	defer file.Close()
-
 	// convert data to morse or backwards
-	data, err := service.Determine(string(text))
+	data, err := service.DetectEncoding(string(text))
 
 	// get name for the file
-	nameForFile := time.Now().Format("20060102_1504") + ".txt"
+	//nameForFile := time.Now().Format("20060102_1504") + ".txt"   //мой вариант был лучше
+	nameForFile := time.Now().UTC().String() //на винде нельзя имя файла с ":", программа упадёт если её там запустить
 
 	//create the file
 	f, err := os.Create(nameForFile)
@@ -62,7 +65,13 @@ func HandlerUpload(w http.ResponseWriter, req *http.Request) {
 
 	// console check
 	fmt.Println(data)
+
 	// write data into /upload page
-	w.Write([]byte(data))
+	_, err = w.Write([]byte(data))
+	if err != nil {
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		http.Error(w, fmt.Sprintf("An error occurred while sending response to client: %v", err), http.StatusInternalServerError)
+		return
+	}
 
 }
