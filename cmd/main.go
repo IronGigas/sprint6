@@ -11,10 +11,10 @@ func main() {
 
 	logger := log.New(os.Stdout, "Server: ", log.LstdFlags)
 
-	theServer := server.NewServer(logger)
+	srv := server.NewServer(logger)
 
 	logger.Printf("Starting server the server on http://localhost:8080/")
-	if err := theServer.HttpServer.ListenAndServe(); err != nil {
+	if err := srv.HttpServer.ListenAndServe(); err != nil {
 		logger.Fatalf("Failed to start server: %v", err)
 	}
 
